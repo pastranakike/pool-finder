@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PoolFinder</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="icon" href="https://kp6yezdnqi-flywheel.netdna-ssl.com/wp-content/uploads/2015/12/poolicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat|Raleway|Roboto|Source+Sans+Pro|Ubuntu" rel="stylesheet">
+  </head>
+    <body>
+        
+    <div class="ssss">
+        <div>
+            <h1 class ="center">Pool Locator</h1>
+        </div>
+        <div id="map" class="box"></div>
+        <div class="flex-container">
+            <div class="col1">
+                <div class="btn2"><input style="width:75%" placeholder="ZipCode" id="zip">
+                </div>
+                <div class="btn1" onclick='clearBut()'>
+                    Clear
+                </div>
+                <div class="btn">
+                    Houses: <div id="hnum">0</div>
+                </div>
+                <div class="button" style="vertical-align:middle" onclick='saveTextAsFile()'><span>Download</span>
+                </div>
+            </div>
+            <div class="col3"><textarea class="tbox" id="textFile"></textarea></div>
+        </div>
+    </div>
+    </body>
+    <script>
+    
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 15
+        });
+        var geocoder = new google.maps.Geocoder();
+        google.maps.event.addListener(map, 'click', function(event) {
+          geocoder.geocode({
+            'latLng': event.latLng
+          }, function(results, status) {
+              var textFile = document.getElementById('textFile').value
+            if (status == google.maps.GeocoderStatus.OK) {
+              if (results[0]) {
+                document.getElementById("textFile").value = textFile + results[0].formatted_address + '\n';
+                var number = document.getElementById("hnum").innerHTML;
+                document.getElementById("hnum").innerHTML = parseFloat(number) + 1;
+              }
+            }
+          });
+        });
+        google.maps.event.addListener(map, 'click', function(event) {
+           placeMarker(event.latLng);
+        });
+
+        function placeMarker(location) {
+            var marker = new google.maps.Marker({
+                position: location, 
+                map: map
+            });
+        }
+      if (navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition(function (position) {
+             initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+             map.setCenter(initialLocation);
+         });
+     }
+      }
+        var zip = document.getElementById("zip");
+        zip.addEventListener("keydown", function (e) {
+            if (e.keyCode === 13) {
+                reCenter(e);
+            }
+        });
+        function reCenter(){
+            var zipCode = document.getElementById("zip").value;
+            zipCode = parseFloat(zipCode);
+            geocoder.geocode( { 'address': zipCode}, function(results, status) {
+              if (status == google.maps.GeocoderStatus.OK) {
+                //Got result, center the map and put it out there
+                map.setCenter(results[0].geometry.location);
+                var marker = new google.maps.Marker({
+                    map: map,
+                    location: results[0].geometry.location
+                });
+              } else {
+                alert("Geocode was not successful for the following reason: " + status);
+              }
+            });
+            
+        }
+        function clearBut(){
+            document.getElementById("hnum").innerHTML = 0;
+            document.getElementById("textFile").value = '';
+            
+        }
+        function saveTextAsFile()
+        {
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if(dd<10) {
+                dd='0'+dd
+            } 
+
+            if(mm<10) {
+                mm='0'+mm
+            } 
+
+            today = mm+'/'+dd+'/'+yyyy;
+            
+            var textToWrite = document.getElementById("textFile").value;
+            var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+            var fileNameToSaveAs = today + '_MailingListPool';
+
+            var downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            if (window.webkitURL != null)
+            {
+                // Chrome allows the link to be clicked
+                // without actually adding it to the DOM.
+                downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+            }
+            else
+            {
+                // Firefox requires the link to be added to the DOM
+                // before it can be clicked.
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+                downloadLink.onclick = destroyClickedElement;
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+            }
+
+            downloadLink.click();
+        }
+                           
+        
+        
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWXgJJpHkktDGiE-xst6E7--WFYtIxBWU&callback=initMap"
+    async defer></script>
+    
+</html>
+    
+    
+    
